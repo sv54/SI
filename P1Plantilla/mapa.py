@@ -4,8 +4,7 @@ class Mapa():
     def __init__(self, archivo):        
         self.mapa, self.origen=leer(archivo)         
         self.alto = len(self.mapa)
-        self.ancho = len(self.mapa[0])
-        print(self.ancho, self.alto)
+        self.ancho = len(self.mapa[0])        
         
     def __str__(self):
         salida = "" 
@@ -34,11 +33,6 @@ class Mapa():
     
     def getOrigen(self):
         return self.origen
-    
-    def coordenadaFueraDeMapa(x,y):
-        if x>=self.ancho or y >= self.alto:
-            return True
-        return False
         
 # ---------------------------------------------------------------------
 

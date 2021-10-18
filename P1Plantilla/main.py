@@ -1,7 +1,9 @@
 import sys, pygame
 import tkinter
+import tkinter.filedialog
 from casilla import *
 from mapa import *
+from nodo import *
 from pygame.locals import *
 
 
@@ -19,6 +21,53 @@ AMARILLO=(255, 255, 0)
 
 # Funciones
 # ---------------------------------------------------------------------
+
+def aEstrella(mapi, origen, destino, camino):
+    Nodo.destino=destino
+    Nodo.mapi=mapi
+    nodoOrigen=Nodo(origen.getCol(),origen.getFila())
+    nodoDestino=Nodo(destino.getCol(),destino.getFila())
+    
+    listaInterior=[]
+    listaFrontera=[nodoOrigen]
+    
+    while len(listaFrontera)>0:
+        #nodo con menor f
+        nodo=listaFrontera[0]
+        for i in listaFrontera:
+            if nodo.f>i.f:
+                nodo=i
+        
+        if nodo==nodoDestino:
+            coste = nodo.g
+            while nodo!=nodoOrigen and nodo is not None:
+                nodo=nodo.padre
+                if nodo is not None:
+                    camino[nodo.y][nodo.x]=nodo.g
+            print(camino)   
+            return coste
+        
+        else:
+            listaFrontera.remove(nodo)
+            listaInterior.append(nodo)
+            hijos=nodo.getHijos()
+            
+            for hijo in hijos:
+                if hijo not in listaInterior:
+                    if hijo not in listaFrontera:
+                        coste= hijo.getCoste()
+                        hijo.f=hijo.g + hijo.calcularH(destino)
+                        listaFrontera.append(hijo)
+                    else:
+                        if hijo in listaFrontera and hijo != nodoDestino and hijo != nodoOrigen:
+                            for i in range(len(listaFrontera)):
+                                if listaFrontera[i]==hijo:
+                                    if(listaFrontera[i].g>hijo.g):
+                                        listaFrontera[i]=hijo
+                                    break
+    return -1
+
+
 
 # Devuelve si una casilla del mapa se puede seleccionar como destino
 def bueno(mapi, pos):
@@ -62,8 +111,7 @@ def inic(mapi):
 
         
 # función principal
-def main():
-    
+def main(): 
     root= tkinter.Tk() #para eliminar la ventana de Tkinter
     root.withdraw() #se cierra
     file=tkinter.filedialog.askopenfilename() #abre el explorador de archivos    
@@ -78,8 +126,6 @@ def main():
     
     mapi=Mapa(file)
     origen=mapi.getOrigen()
-    #print(origen.getFila(), origen.getCol())
-    print(mapi.getCelda(origen.getFila()+1,origen.getCol()))
     camino=inic(mapi)   
     
     anchoVentana=mapi.getAncho()*(TAM+MARGEN)+MARGEN
@@ -125,7 +171,7 @@ def main():
                         destino=casi                        
                         camino=inic(mapi)
                         # llamar al A*
-                        #coste=aEstrella(mapi, origen, destino, camino)      
+                        coste=aEstrella(mapi, origen, destino, camino)      
                         if coste==-1:
                             tkinter.messagebox.showwarning(title='Error', message='No existe un camino entre origen y destino')                     
                         else:
@@ -175,111 +221,3 @@ if __name__=="__main__":
     main()
     
     
-def aEstrella(mapi, origen, destino, camino):
-    nodo=Nodo(origen.getCol(), origen.getFila())
-    nodoDestino=Nodo(destino.getCol(), destino.getFila())
-    listaCerrada=[]
-    listaAbierta=[nodo]
-    
-    while not listaAbierta:
-        j=0
-        if len(listaAbierta)>1:
-            for i in range(len(listaAbierta)):
-                if listaAbierta[i].getF()<nodo.getF():
-                    nodo=listaAbierta[i]
-                    j=i
-        
-        
-        if nodo==nodoDestino: #n==destino: #reconstruir camino
-            return 1
-        else:
-            listaAbierta.pop(j)
-            listaCerrada.append(nodo)
-            #print(mapi.getCelda(origen.getFila()+1,origen.getCol()))
-            hijos=nodo.getHijos(mapi)
-            #eliminamos hijos que apuntan a una pared o origen
-            i=0
-            while i<len(hijos):
-                celda=mapi.getCelda(hijos[i].getY(),hijos[i].getX())
-                if celda==1 or celda == 2:
-                    hijos.pop(i)
-                i=i+1
-            
-            for k in hijos:
-                padre=k.getPadre()
-                coste=k.getCoste()
-                if !(k is in listaAbierta):
-                    g=padre.getG()+coste
-                    k.setG(g)
-                    listaAbierta.append(k)
-                else:
-                    if k.getG()<padre.getG()+coste:
-                        k.setPadre(padre)
-                        k.setG(padre.getG()+coste)
-                
-            #Comprobar si los hijos estan en la lista cerrada
-    return -1 #coste
-    
-    
-class Nodo():
-    def __init__(self,x,y,h=0,padre=None):
-        self.x=x
-        self.y=y
-        self.h=h
-        self.padre=padre
-        
-    def getHijos(self, mapi):
-        x=self.x
-        y=self.y
-        lista=[]
-        nodo=Nodo(x-1,y-1,self)
-        lista.append(nodo)
-        nodo=Nodo(x,y-1,self)
-        lista.append(nodo)
-        nodo=Nodo(x+1,y-1,self)
-        lista.append(nodo)
-        nodo=Nodo(x-1,y,self)
-        lista.append(nodo)
-        nodo=Nodo(x+1,y,self)
-        lista.append(nodo)
-        nodo=Nodo(x-1,y+1,self)
-        lista.append(nodo)
-        nodo=Nodo(x,y+1,self)
-        lista.append(nodo)
-        nodo=Nodo(x+1,y+1,self)
-        lista.append(nodo)
-        return lista
-        
-        
-    def calcularF(self,coste,h=0):
-        return self.g + coste + h
-    
-    def getPadre(self):
-        return self.padre
-    
-    def getCoste(self):
-        padre=self.padre
-        if padre.getX() != self.getX() and padre.getY() != self.getY():
-            return 1.5
-        return 1
-        
-    def getF(self):
-        return self.f
-
-    def getG(self):
-        return self.g
-    
-    def getX(self):
-        return self.x
-    
-    def getY(self):
-        return self.y
-
-    def setG(self,g):
-        self.g=g
-        
-    def setPadre(self, padre):
-        self.padre=padre
-        
-    def __eq__(self, nodo):
-        return self.getX() == nodo.getX() and self.getY()==nodo.getY()

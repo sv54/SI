@@ -1,6 +1,7 @@
 import sys, pygame
 import tkinter
 import tkinter.filedialog
+import math
 from casilla import *
 from mapa import *
 from nodo import *
@@ -22,11 +23,16 @@ AMARILLO=(255, 255, 0)
 # Funciones
 # ---------------------------------------------------------------------
 
+def imprimirCamino(camino):
+    orden
+
 def aEstrella(mapi, origen, destino, camino):
     Nodo.destino=destino
     Nodo.mapi=mapi
     nodoOrigen=Nodo(origen.getCol(),origen.getFila())
     nodoDestino=Nodo(destino.getCol(),destino.getFila())
+
+    nodosExplorados=0
     
     listaInterior=[]
     listaFrontera=[nodoOrigen]
@@ -40,11 +46,12 @@ def aEstrella(mapi, origen, destino, camino):
         
         if nodo==nodoDestino:
             coste = nodo.g
+            imprimirCamino(camino)
             while nodo!=nodoOrigen and nodo is not None:
                 nodo=nodo.padre
                 if nodo is not None:
-                    camino[nodo.y][nodo.x]=nodo.g
-            print(camino)   
+                    camino[nodo.y][nodo.x]=","
+            print(nodosExplorados)
             return coste
         
         else:
@@ -56,8 +63,13 @@ def aEstrella(mapi, origen, destino, camino):
                 if hijo not in listaInterior:
                     if hijo not in listaFrontera:
                         coste= hijo.getCoste()
-                        hijo.f=hijo.g + hijo.calcularH(destino)
+                        #hijo.f=hijo.g + 0
+                        #hijo.f=hijo.g + hijo.calcularHEuclidea(destino)
+                        hijo.f=hijo.g + hijo.calcularHManhattan(destino)
+                        camino[hijo.y][hijo.x]=hijo.g
+                        nodosExplorados = nodosExplorados +1
                         listaFrontera.append(hijo)
+                        
                     else:
                         if hijo in listaFrontera and hijo != nodoDestino and hijo != nodoOrigen:
                             for i in range(len(listaFrontera)):
@@ -170,6 +182,7 @@ def main():
                             mapi.setCelda(int(origen.getFila()), int(origen.getCol()), 0) #se marca como libre la celda origen
                         destino=casi                        
                         camino=inic(mapi)
+                        #print(camino)
                         # llamar al A*
                         coste=aEstrella(mapi, origen, destino, camino)      
                         if coste==-1:
@@ -191,8 +204,10 @@ def main():
                 if mapi.getCelda(fil,col)==0:
                     if camino[fil][col]=='.':
                         pygame.draw.rect(screen, BLANCO, [(TAM+MARGEN)*col+MARGEN, (TAM+MARGEN)*fil+MARGEN, TAM, TAM], 0)
-                    else:
+                    if camino[fil][col]==',':
                         pygame.draw.rect(screen, AMARILLO, [(TAM+MARGEN)*col+MARGEN, (TAM+MARGEN)*fil+MARGEN, TAM, TAM], 0)
+                    if isinstance(camino[fil][col],int) or isinstance(camino[fil][col],float):
+                        pygame.draw.rect(screen, AZUL, [(TAM+MARGEN)*col+MARGEN, (TAM+MARGEN)*fil+MARGEN, TAM, TAM], 0)
                     
                 elif mapi.getCelda(fil,col)==1:
                     pygame.draw.rect(screen, ROJO, [(TAM+MARGEN)*col+MARGEN, (TAM+MARGEN)*fil+MARGEN, TAM, TAM], 0)

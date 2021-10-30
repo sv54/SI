@@ -1,3 +1,5 @@
+import math
+
 class Nodo():
     
     destino=0
@@ -7,14 +9,13 @@ class Nodo():
         self.y=y
         self.padre=None
         self.g=0
-        self.h=self.calcularH(Nodo.destino)
+        self.h=self.calcularHManhattan(Nodo.destino)
         self.f=self.g+self.h
         
         
     def getHijos(self):
         x=self.x
         y=self.y
-        #g=self.getG()
         lista=[]
         
         nodo=Nodo(x-1,y-1)
@@ -85,7 +86,7 @@ class Nodo():
             return 1.5
         return 1
     
-    def calcularH(self,destino):
+    def calcularHManhattan(self,destino):
         columna=destino.getCol() - self.x
         fila=destino.getFila() - self.y
         if columna < 0:
@@ -93,5 +94,12 @@ class Nodo():
         if fila < 0:
             fila=fila * -1
         self.h = columna + fila
+        return self.h
+
+    def calcularHEuclidea(self,destino):
+        columna=destino.getCol() - self.x
+        fila=destino.getFila() - self.y
+        
+        self.h= math.sqrt(columna*columna + fila * fila)
         return self.h
 

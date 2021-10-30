@@ -103,3 +103,9 @@ class Nodo():
         self.h= math.sqrt(columna*columna + fila * fila)
         return self.h
 
+    def calcularChebyshev(self,destino):
+        columna=destino.getCol() - self.x
+        fila=destino.getFila() - self.y
+        
+        self.h= max(columna, fila)
+        return self.h

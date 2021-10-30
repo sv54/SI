@@ -2,10 +2,12 @@ import sys, pygame
 import tkinter
 import tkinter.filedialog
 import math
+import numpy as np
 from casilla import *
 from mapa import *
 from nodo import *
 from pygame.locals import *
+
 
 
 MARGEN=5
@@ -23,16 +25,42 @@ AMARILLO=(255, 255, 0)
 # Funciones
 # ---------------------------------------------------------------------
 
-def imprimirCamino(camino):
-    orden
+def ActualizarTraza(traza,x,y,orden):
+    if orden<10:
+        traza[y][x]='0'+str(orden)
+    else:
+        traza[y][x]=orden
+    return traza
+
+def crearTraza(mapi):
+    matriz = []
+    for i in range(mapi.getAlto()):
+        matriz.append([])
+        for j in range(mapi.getAncho()):
+            matriz[i].append(-1)
+    return matriz
+
+def imprimirTraza(traza,alto,ancho):
+    filas = len(traza)
+    columnas = len(traza[0])
+    for i in range(filas):
+        for j in range(columnas):
+            #print("| {0} ".format(traza[i][j]), sep=',', end='')
+            print("\t{0}".format(traza[i][j]), sep=',', end='')
+        print('')
 
 def aEstrella(mapi, origen, destino, camino):
     Nodo.destino=destino
     Nodo.mapi=mapi
     nodoOrigen=Nodo(origen.getCol(),origen.getFila())
     nodoDestino=Nodo(destino.getCol(),destino.getFila())
+    traza= crearTraza(mapi)
+    traza= ActualizarTraza(traza,origen.getCol(),origen.getFila(),0)
+    orden=1
+    
 
     nodosExplorados=0
+    nodosActualizados=0
     
     listaInterior=[]
     listaFrontera=[nodoOrigen]
@@ -46,12 +74,13 @@ def aEstrella(mapi, origen, destino, camino):
         
         if nodo==nodoDestino:
             coste = nodo.g
-            imprimirCamino(camino)
+            imprimirTraza(traza,mapi.getAlto(),mapi.getAncho())
             while nodo!=nodoOrigen and nodo is not None:
                 nodo=nodo.padre
                 if nodo is not None:
                     camino[nodo.y][nodo.x]=","
-            print(nodosExplorados)
+            print('Nodos Explorados: ' ,str(nodosExplorados))
+            print('Nodos Actualizados: ', str(nodosActualizados))
             return coste
         
         else:
@@ -64,9 +93,12 @@ def aEstrella(mapi, origen, destino, camino):
                     if hijo not in listaFrontera:
                         coste= hijo.getCoste()
                         #hijo.f=hijo.g + 0
-                        #hijo.f=hijo.g + hijo.calcularHEuclidea(destino)
-                        hijo.f=hijo.g + hijo.calcularHManhattan(destino)
+                        #hijo.f=hijo.g + hijo.calcularHManhattan(destino)
+                        hijo.f=hijo.g + hijo.calcularHEuclidea(destino)
+                        #hijo.f=hijo.g + hijo.calcularChebyshev(destino)
                         camino[hijo.y][hijo.x]=hijo.g
+                        traza=ActualizarTraza(traza,hijo.x,hijo.y,orden)
+                        orden=orden+1
                         nodosExplorados = nodosExplorados +1
                         listaFrontera.append(hijo)
                         
@@ -75,7 +107,15 @@ def aEstrella(mapi, origen, destino, camino):
                             for i in range(len(listaFrontera)):
                                 if listaFrontera[i]==hijo:
                                     if(listaFrontera[i].g>hijo.g):
+                                        print("Actualizamos nodo que ya esta en la lista abierta "+ "x: "+str(hijo.x) + " y: " + str(hijo.y))
+                                        print("g anterior: "+ str(listaFrontera[i].g) + "; Nueva g: " + str(hijo.g) + ';')
+                                        traza=ActualizarTraza(traza,hijo.x,hijo.y,orden)
+                                        orden=orden+1
+                                        #hijo.f=hijo.g + hijo.calcularHManhattan(destino)
+                                        hijo.f=hijo.g + hijo.calcularHEuclidea(destino)
+                                        #hijo.f=hijo.g + hijo.calcularChebyshev(destino)
                                         listaFrontera[i]=hijo
+                                        nodosActualizados = nodosActualizados +1
                                     break
     return -1
 

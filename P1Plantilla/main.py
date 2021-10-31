@@ -58,7 +58,7 @@ def aEstrella(mapi, origen, destino, camino):
     traza= ActualizarTraza(traza,origen.getCol(),origen.getFila(),0)
     orden=1
     
-
+    #estadisticas
     nodosExplorados=0
     nodosActualizados=0
     
